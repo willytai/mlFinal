@@ -7,7 +7,7 @@ def filter_sentence(sentence):
 
 	return sentence
 
-file = open('dataset/training_data/test.txt', 'w+',encoding='utf-8')
+file = open('dataset/training_data/test.txt', 'w+', encoding='utf-8')
 
 skip = True
 with open('dataset/testing_data.csv', encoding='cp950') as f:
@@ -18,5 +18,8 @@ with open('dataset/testing_data.csv', encoding='cp950') as f:
 
 		line = line.split()[1:]
 		line = [filter_sentence(l) for l in line]
-		file.write('{}'.format("\n".join(line)))
-		
+
+		for fuck in line:
+			if len(fuck) == 1:
+				continue
+			file.write('{}\n'.format(fuck))		

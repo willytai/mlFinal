@@ -1,5 +1,4 @@
 from seq2vec import Seq2VecR2RWord
-from gensim.models import word2vec
 from seq2vec.word2vec import GensimWord2vec
 
 import sys
@@ -43,7 +42,7 @@ transformer = Seq2VecR2RWord(
       learning_rate=0.05
 )
 
-transformer.fit(train_seq)
+transformer.fit(train_seq, verbose=1)
 result = transformer.transform(test_seq)
 print ('test: {}'.format(" ".join(test_seq)))
-print ('next: {}'.format(" ".join(result)))
+print ('next: {}'.format(result), 'shape:', result.shape)

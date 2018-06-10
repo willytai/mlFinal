@@ -11,7 +11,7 @@ def generate_vec_from_seq(train, mgr):
 	model = Sequential()
 	model.add(mgr.embedding_layer())
 	for seq in train:
-		vec = model.predict(seq)
+		vec = model.predict(seq).reshape((1, mgr.maxlen['train'], mgr.Embedding_dim))
 		yield (vec, vec)
 
 def CreateModel(mgr):
@@ -25,7 +25,8 @@ def CreateModel(mgr):
 
 	seq_vec = Input(shape=(max_len, mgr.Embedding_dim))
 
-	encoded = LSTM(1024, return_sequences=True, dropout=droprate)(seq_vec)
+	encoded = LSTM(mgr.Embedding_dim,  return_sequences=True, dropout=droprate)(seq_vec)
+	encoded = LSTM(1024, return_sequences=True, dropout=droprate)(encoded)
 	encoded = LSTM(512,  return_sequences=True, dropout=droprate)(encoded)
 	encoded = LSTM(128,  return_sequences=True, dropout=droprate)(encoded)
 	encoded = LSTM(64,   return_sequences=True, dropout=droprate)(encoded)
@@ -33,6 +34,7 @@ def CreateModel(mgr):
 	decoded = LSTM(128,  return_sequences=True, dropout=droprate)(encoded)
 	decoded = LSTM(512,  return_sequences=True, dropout=droprate)(decoded)
 	decoded = LSTM(1024, return_sequences=True, dropout=droprate)(decoded)
+	decoded = LSTM(mgr.Embedding_dim, return_sequences=True, dropout=droprate)(decoded)
 
 	encoder = Model(seq_vec, encoded)
 
@@ -54,6 +56,9 @@ def main():
 
 	model = CreateModel(mgr)
 
+	batch_size = 256
+	epochs = 10
+	
 	generate_train = generate_vec_from_seq(train, mgr)
 	generate_val   = generate_vec_from_seq(val, mgr)
 
@@ -61,14 +66,11 @@ def main():
 	checkpoint = ModelCheckpoint('model/auto.h5', monitor='mse', verbose=1, save_best_only=True, mode='min')
 	earlystop  = EarlyStopping(monitor='val_loss', patience=3, verbose=1, mode='min')
 
-	batch_size = 256
-	epochs = 10
-
 	model.fit_generator(
 		generator=generate_train,
 		validation_data=generate_val,
-		validation_steps=batch_size,
-		samples_per_epoch=batch_size,
+		validation_steps=int(val.shape[0]/batch_size),
+		samples_per_epoch=int(train.shape[0]/batch_size),
 		epochs=epochs,
 		use_multiprocessing=True,
 		workers=-1,

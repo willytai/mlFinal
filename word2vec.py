@@ -10,19 +10,19 @@ def main():
 	sentences += list(word2vec.LineSentence('dataset/segmentated/5_train_seg.txt'))
 	sentences += list(word2vec.LineSentence('dataset/segmentated/test_seg.txt'))
 
-	model = word2vec.Word2Vec(sentences, size=100, min_count=3, iter=20, workers=-1)
+	model = word2vec.Word2Vec(sentences, size=100, min_count=1, iter=50, workers=-1)
 
 	print ('vocab_size:', model.wv.syn0.shape[0])
 
 	word_vec = model.wv
 
-	word_vec.save_word2vec_format('word2vec.bin', binary=True)
+	word_vec.save_word2vec_format('model/word2vec.bin', binary=True)
 
 	####################
 	## test similarity
 	####################
 
-	word_vectors = KeyedVectors.load_word2vec_format('word2vec.bin', binary=True)
+	word_vectors = KeyedVectors.load_word2vec_format('model/word2vec.bin', binary=True)
 
 	print ('successfully loaded')
 

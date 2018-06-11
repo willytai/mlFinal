@@ -2,17 +2,20 @@ import sys
 import numpy as np
 
 from keras.models import Model, Sequential
-from keras.layers import Dense, BatchNormalization, Dropout, LSTM, GRU, Embedding, Input
+from keras.layers import Dense, BatchNormalization, Dropout, LSTM, GRU, Embedding, Input, RepeatVector
 from keras.callbacks import EarlyStopping, ModelCheckpoint
 from util import DataManager
 
 
-def generate_vec_from_seq(train, mgr):
+def to_vec(train, mgr, ratio):
 	model = Sequential()
 	model.add(mgr.embedding_layer())
-	for seq in train:
-		vec = model.predict(seq).reshape((1, mgr.maxlen['train'], mgr.Embedding_dim))
-		yield (vec, vec)
+
+	num = int(ratio*len(train))
+
+	vec = model.predict(train[:num])
+
+	return vec
 
 def CreateModel(mgr):
 	###########################
@@ -24,17 +27,16 @@ def CreateModel(mgr):
 	opt      = 'adam'
 
 	seq_vec = Input(shape=(max_len, mgr.Embedding_dim))
+	encoded = GRU(mgr.Embedding_dim, return_sequences=True, dropout=droprate)(seq_vec)
+	encoded = GRU(80,  return_sequences=True,  dropout=droprate)(encoded)
+	encoded = GRU(64,  return_sequences=True,  dropout=droprate)(encoded)
+	encoded = GRU(32,  return_sequences=False, dropout=droprate)(encoded)
 
-	encoded = LSTM(mgr.Embedding_dim,  return_sequences=True, dropout=droprate)(seq_vec)
-	encoded = LSTM(1024, return_sequences=True, dropout=droprate)(encoded)
-	encoded = LSTM(512,  return_sequences=True, dropout=droprate)(encoded)
-	encoded = LSTM(128,  return_sequences=True, dropout=droprate)(encoded)
-	encoded = LSTM(64,   return_sequences=True, dropout=droprate)(encoded)
+	duplicate = RepeatVector(max_len)(encoded)
 
-	decoded = LSTM(128,  return_sequences=True, dropout=droprate)(encoded)
-	decoded = LSTM(512,  return_sequences=True, dropout=droprate)(decoded)
-	decoded = LSTM(1024, return_sequences=True, dropout=droprate)(decoded)
-	decoded = LSTM(mgr.Embedding_dim, return_sequences=True, dropout=droprate)(decoded)
+	decoded = GRU(64,  return_sequences=True, dropout=droprate)(duplicate)
+	decoded = GRU(80,  return_sequences=True, dropout=droprate)(decoded)
+	decoded = GRU(mgr.Embedding_dim, return_sequences=True, dropout=droprate)(decoded)
 
 	encoder = Model(seq_vec, encoded)
 
@@ -54,28 +56,25 @@ def main():
 
 	train, val = mgr.split_data('train', 0.05)
 
+	val   = to_vec(val, mgr, 1)
+	train = to_vec(train, mgr, 1)
+
 	model = CreateModel(mgr)
 
 	batch_size = 256
 	epochs = 10
-	
-	generate_train = generate_vec_from_seq(train, mgr)
-	generate_val   = generate_vec_from_seq(val, mgr)
 
 
 	checkpoint = ModelCheckpoint('model/auto.h5', monitor='mse', verbose=1, save_best_only=True, mode='min')
 	earlystop  = EarlyStopping(monitor='val_loss', patience=3, verbose=1, mode='min')
 
-	model.fit_generator(
-		generator=generate_train,
-		validation_data=generate_val,
-		validation_steps=int(val.shape[0]/batch_size),
-		samples_per_epoch=int(train.shape[0]/batch_size),
+	model.fit(
+		train, train,
+		batch_size=batch_size,
 		epochs=epochs,
-		use_multiprocessing=True,
-		workers=-1,
 		verbose=1,
-		callbacks=[checkpoint, earlystop]
+		callbacks=[checkpoint, earlystop],
+		validation_data=(val, val)
 		)
 
 if __name__ == '__main__':

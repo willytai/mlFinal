@@ -45,11 +45,11 @@ class DataManager():
 
     def to_sequence(self):
         for key in self.data:
-            print ('Converting %s to sequences...'%key)
             for idx in range(len(self.data[key])):
                 sentences = self.data[key][idx]
                 tmp = []
                 for i in range(len(sentences)):
+                    print ('\rConverting {} to sequences... {}'.format(key, i), flush=True, end='')
                     st = []
                     for j in range(len(sentences[i])):
                         if sentences[i][j] in self.w2v_model.wv.vocab:
@@ -57,6 +57,7 @@ class DataManager():
                             st.append(self.w2v_model.wv.vocab[sentences[i][j]].index)
                     tmp.append(st)
                 self.data[key][idx] = np.array(pad_sequences(tmp, maxlen=self.maxlen[key]))
+                print ('')
     
     def get_data(self,name='', all=False):
         if all:

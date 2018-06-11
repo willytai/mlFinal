@@ -37,8 +37,8 @@ test_seq = ['我們', '拾獲', '妳', '妹妹', '物品', '的', '地方' ]
 transformer = Seq2VecR2RWord(
       word2vec_model=word_model,
       max_length=20,
-      latent_size=100,
-      encoding_size=50,
+      latent_size=10,
+      encoding_size=10,
       learning_rate=0.05
 )
 

@@ -1,5 +1,5 @@
 import re
-import os
+import os, sys
 import numpy as np
 from gensim.models import Word2Vec
 from gensim.models.keyedvectors import KeyedVectors
@@ -9,6 +9,7 @@ import pickle as pkl
 
 class DataManager():
     def __init__(self):
+        self.vec = {}
         self.data = {}
         self.maxlen = {} 
 
@@ -16,10 +17,10 @@ class DataManager():
         self.maxlen[name] = 0
         if name=='train':
             X = []
-            file_path = ['1_train_seg.txt', '2_train_seg.txt', '3_train_seg.txt', '4_train_seg.txt', '5_train_seg.txt']
+            file_path = ['1_train_seg.txt', '2_train_seg.txt', '3_train_seg.txt', '4_train_seg.txt', '5_train_seg.txt', 'test_seg.txt']
             file_path = [os.path.join(data_path, path) for path in file_path]
             for path in file_path:
-                print ('read data from %s...'%path)
+                print ('reading data from %s...'%path)
                 with open(path,'r') as f:
                     for line in f:
                         line = line.strip().split()
@@ -29,7 +30,7 @@ class DataManager():
             self.data[name] = [X]
 
         else:
-            print ('read data from %s...'%data_path)
+            print ('reading data from %s...'%data_path)
             X = [[], [], [], [], [], [], []]
             i = 0
             with open(data_path,'r') as f:
@@ -63,11 +64,14 @@ class DataManager():
             for key in self.data:
                 data += self.data[key][0]
             return data 
-        return self.data[name]
+        return np.array(self.data[name][0])
 
     def load_word2vec(self, data_path):
         print ('load word2vec from %s...'%data_path)
         self.w2v_model = KeyedVectors.load_word2vec_format(data_path, binary=True)
+        self.vocab_size, self.Embedding_dim = self.w2v_model.wv.syn0.shape
+        print ('vocab_size:   ', self.vocab_size)
+        print ('Embedding_dim:', self.Embedding_dim)
 
     def embedding_layer(self):
         return self.w2v_model.wv.get_keras_embedding(False)

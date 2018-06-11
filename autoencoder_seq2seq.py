@@ -45,6 +45,8 @@ def CreateModel(mgr):
 	model.compile(loss=loss, optimizer=opt)
 	model.summary()
 
+	encoder.save('model/encoder.h5')
+
 	return model
 
 def main():
@@ -61,11 +63,11 @@ def main():
 
 	model = CreateModel(mgr)
 
-	batch_size = 256
+	batch_size = 512
 	epochs = 10
 
 
-	checkpoint = ModelCheckpoint('model/auto.h5', monitor='mse', verbose=1, save_best_only=True, mode='min')
+	checkpoint = ModelCheckpoint('model/auto.h5', monitor='val_loss', verbose=1, save_best_only=True, mode='min')
 	earlystop  = EarlyStopping(monitor='val_loss', patience=3, verbose=1, mode='min')
 
 	model.fit(

@@ -49,7 +49,7 @@ class DataManager():
                 sentences = self.data[key][idx]
                 tmp = []
                 for i in range(len(sentences)):
-                    print ('\rConverting {} to sequences... {}'.format(key, i), flush=True, end='')
+                    print ('\rConverting {} to sequences... {}'.format(key, i+1), flush=True, end='')
                     st = []
                     for j in range(len(sentences[i])):
                         if sentences[i][j] in self.w2v_model.wv.vocab:
@@ -65,6 +65,8 @@ class DataManager():
             for key in self.data:
                 data += self.data[key][0]
             return data 
+        elif name == 'test':
+            return np.array(self.data['test'])
         return np.array(self.data[name][0])
 
     def load_word2vec(self, data_path):

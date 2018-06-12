@@ -6,8 +6,15 @@ from keras.layers import Dense, BatchNormalization, Dropout, LSTM, GRU, Embeddin
 from keras.callbacks import EarlyStopping, ModelCheckpoint
 from util import DataManager
 
+# train with 50% memory
+import tensorflow as tf
+from keras.backend.tensorflow_backend import set_session
+config = tf.ConfigProto()
+config.gpu_options.per_process_gpu_memory_fraction = 0.5
+set_session(tf.Session(config=config))
 
-def to_vec(train, mgr, ratio):
+
+def to_vec(train, mgr, ratio=1):
 	model = Sequential()
 	model.add(mgr.embedding_layer())
 
@@ -45,8 +52,6 @@ def CreateModel(mgr):
 	model.compile(loss=loss, optimizer=opt)
 	model.summary()
 
-	encoder.save('model/encoder.h5')
-
 	return model
 
 def main():
@@ -63,11 +68,18 @@ def main():
 
 	model = CreateModel(mgr)
 
-	batch_size = 512
-	epochs = 10
+	##############
+	## save model
+	##############
+	model_json = model.to_json()
+	with open("model/auto.json", "w") as json_file:
+		json_file.write(model_json)
+
+	batch_size = 1024
+	epochs = 20
 
 
-	checkpoint = ModelCheckpoint('model/auto.h5', monitor='val_loss', verbose=1, save_best_only=True, mode='min')
+	checkpoint = ModelCheckpoint('model/auto_weights.h5', monitor='val_loss', verbose=1, save_best_only=True, save_weights_only=True, mode='min')
 	earlystop  = EarlyStopping(monitor='val_loss', patience=3, verbose=1, mode='min')
 
 	model.fit(

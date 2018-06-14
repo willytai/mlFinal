@@ -30,13 +30,13 @@ def main():
 											size=size,
 											window=win,
 											min_count=1,
-											iter=it,
+											iter=80,
 											negative=neg,
 											workers=12)
 
 					word_vec = model.wv
 
-					word_vec.save_word2vec_format('new_model/word2vec{}_win{}_it{}_alp{}_neg{}.bin'.format(size, win, it, alpha, neg), binary=True)
+					word_vec.save_word2vec_format('new_model/word2vec{}_win{}_neg{}.bin'.format(size, win, neg), binary=True)
 
 	####################
 	## test similarity

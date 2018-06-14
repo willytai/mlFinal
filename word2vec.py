@@ -11,30 +11,32 @@ def main():
 	sentences += list(word2vec.LineSentence('dataset/segmentated/test_seg.txt'))
 	sentences += list(word2vec.LineSentence('dataset/segmentated/test_full_seg.txt'))
 
-	sizes  = [50, 100, 150, 300]
-	window = [15, 14, 13, 12, 11, 10, 9, 8]
-	alphas = [0.01]
-	its    = [80]
+	sizes    = [50, 100, 150]
+	window   = [15, 14, 13, 12, 11, 10, 9, 8, 7]
+	negative = [0, 5, 10]
+	alphas   = [0.01]
+	its      = [80]
 
 	for size in sizes:
 		for win in window:
-			for it in its:
+			for neg in negative:
 				for alpha in alphas:
-					print ('\rtraining word2vec: size {}, window {}'.format(size, win), end='', flush=True)
+					print ('\rtraining word2vec: size {}, window {}, negative {}'.format(size, win, neg))
 					model = word2vec.Word2Vec(sentences,
 											sg=1,
 											hs=1,
 											alpha=alpha,
-											min_alpha=0.00005,
+											min_alpha=0.0001,
 											size=size,
 											window=win,
 											min_count=1,
 											iter=it,
-											workers=11)
+											negative=neg,
+											workers=12)
 
 					word_vec = model.wv
 
-					word_vec.save_word2vec_format('model/word2vec{}_win{}_it{}_alp{}.bin'.format(size, win, it, alpha), binary=True)
+					word_vec.save_word2vec_format('new_model/word2vec{}_win{}_it{}_alp{}_neg{}.bin'.format(size, win, it, alpha, neg), binary=True)
 
 	####################
 	## test similarity

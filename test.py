@@ -1,13 +1,29 @@
 import numpy as np
 import sys
 
-from util import cos_dist
+from scipy import spatial
 from gensim.models.keyedvectors import KeyedVectors
 
 
+# load tfidf
+tfidf = np.load('tfidf.npy').item()
+
+def sentence_vector(text, wordmodel, tfidf=tfidf):
+	vec = np.zeros(wordmodel.wv.syn0.shape[1])
+
+	for word in text:
+		vec += tfidf[word]*wordmodel[word]
+
+	return vec
+
+def cos_dist(ref, vec):
+    ref = ref.reshape(-1)
+    vec = vec.reshape(-1)
+    
+    return spatial.distance.cosine(ref,vec)    
+
 
 test_file = 'dataset/segmentated/test_full_seg.txt'
-# model_path = sys.argv[1]
 
 test = [[], [], [], [], [], [], []]
 
@@ -24,7 +40,7 @@ print ('')
 
 # ensemble 3 models
 models = []
-for k in range(3):
+for k in range(len(sys.argv)-1):
 
 	print ('loading word2vec from %s...' % sys.argv[k+1])
 	w2v_model = KeyedVectors.load_word2vec_format(sys.argv[k+1], binary=True)
@@ -33,18 +49,28 @@ for k in range(3):
 	print ('Embedding_dim:', Embedding_dim)
 	models.append(w2v_model)
 
+##############################################################
+TFIDF = True # this is better
+# TFIDF = False
+
 result = []
 for i in range(5060):
 	print ('\rPredicting data {}/5060'.format(i+1), flush=True, end='')
 
 	di = np.zeros(6)
 	for w2v_model in models:
-		ref = np.average(w2v_model[test[0][i]], axis=0)
+		if TFIDF == False:
+			ref = np.average(w2v_model[test[0][i]], axis=0)
+		else:
+			ref = sentence_vector(test[0][i], w2v_model)
 		for idx in range(1, 7):
-			choice = np.average(w2v_model[test[idx][i]], axis=0)
+			if TFIDF == False:
+				choice = np.average(w2v_model[test[idx][i]], axis=0)
+			else:
+				choice = sentence_vector(test[idx][i], w2v_model)
 			di[idx-1] += cos_dist(ref, choice)
 	
-	di /= len(models)
+	# di /= len(models)
 
 	result.append(di.argmin())
 			 
@@ -83,5 +109,5 @@ print ('\ntesting accuracy: %2f' % (count/all))
 
 # record accuracy
 # file = open('acc.csv', 'a+')
-# file.write('{},{}\n'.format(model_path, count/all))
+# file.write('{},{}\n'.format(sys.argv[1], count/all))
 # file.close()

@@ -1,0 +1,6 @@
+word2vec150_hs1.bin
+word2vec150_win13_it80_alp0.01.bin
+word2vec150_win8_it80_alp0.01.bin
+word2vec50_hs0.bin
+word2vec50_hs1.bin
+TFIDF set to True

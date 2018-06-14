@@ -9,35 +9,40 @@ def main():
 	sentences += list(word2vec.LineSentence('dataset/segmentated/4_train_seg.txt'))
 	sentences += list(word2vec.LineSentence('dataset/segmentated/5_train_seg.txt'))
 	sentences += list(word2vec.LineSentence('dataset/segmentated/test_seg.txt'))
+	sentences += list(word2vec.LineSentence('dataset/segmentated/test_full_seg.txt'))
 
-	model = word2vec.Word2Vec(sentences, size=100, min_count=1, iter=50, workers=-1)
+	sizes  = [50, 100, 150, 300]
+	window = [15, 14, 13, 12, 11, 10, 9, 8]
+	alphas = [0.01]
+	its    = [80]
 
-	print ('vocab_size:', model.wv.syn0.shape[0])
+	for size in sizes:
+		for win in window:
+			for it in its:
+				for alpha in alphas:
+					print ('\rtraining word2vec: size {}, window {}'.format(size, win), end='', flush=True)
+					model = word2vec.Word2Vec(sentences,
+											sg=1,
+											hs=1,
+											alpha=alpha,
+											min_alpha=0.00005,
+											size=size,
+											window=win,
+											min_count=1,
+											iter=it,
+											workers=11)
 
-	word_vec = model.wv
+					word_vec = model.wv
 
-	word_vec.save_word2vec_format('model/word2vec.bin', binary=True)
+					word_vec.save_word2vec_format('model/word2vec{}_win{}_it{}_alp{}.bin'.format(size, win, it, alpha), binary=True)
 
 	####################
 	## test similarity
 	####################
 
-	word_vectors = KeyedVectors.load_word2vec_format('model/word2vec.bin', binary=True)
+	# word_vectors = KeyedVectors.load_word2vec_format('model/word2vec.bin', binary=True)
 
-	print ('successfully loaded')
-
-	# model = word2vec.Word2Vec.load('word2vec.model')
-	
-	# test = "風火輪"
-
-	# buf = model.most_similar(test, topn=10)
-
-	# print (test)
-
-	# print ("相似詞前 10 排序")
-
-	# for item in buf:
-	# 	print ('{}, {}'.format(item[0], item[1]))
+	# print ('successfully loaded')
 
 
 if __name__ == '__main__':

@@ -2,10 +2,24 @@ import re
 import os, sys
 import numpy as np
 from gensim.models import Word2Vec
+from scipy import spatial
 from gensim.models.keyedvectors import KeyedVectors
 from keras.preprocessing.text import Tokenizer
 from keras.preprocessing.sequence import pad_sequences
 import pickle as pkl
+
+def norm(data):
+    mean = data.mean(axis=0)
+    std  = data.std(axis=0)
+    for i in range(data.shape[0]):
+        data[i] = (data[i] - mean ) / std
+    return data
+
+def cos_dist(ref, vec):
+    ref = ref.reshape(-1)
+    vec = vec.reshape(-1)
+
+    return spatial.distance.cosine(ref,vec)
 
 class DataManager():
     def __init__(self):
@@ -17,7 +31,7 @@ class DataManager():
         self.maxlen[name] = 0
         if name=='train':
             X = []
-            file_path = ['1_train_seg.txt', '2_train_seg.txt', '3_train_seg.txt', '4_train_seg.txt', '5_train_seg.txt', 'test_seg.txt']
+            file_path = ['1_train_seg.txt', '2_train_seg.txt', '3_train_seg.txt', '4_train_seg.txt', '5_train_seg.txt', 'test_seg.txt', 'test_full_seg.txt']
             file_path = [os.path.join(data_path, path) for path in file_path]
             for path in file_path:
                 print ('reading data from %s...'%path)
@@ -42,6 +56,18 @@ class DataManager():
                         self.maxlen[name] = len(line)
             self.data[name] = X 
         print ('maxlen: %d'%self.maxlen[name])
+
+    def add_test(self, data_path):
+        X = []
+        self.maxlen['test'] = 0
+        print ('reading data from %s...'%data_path)
+        with open(data_path, 'r') as f:
+            for line in f:
+                line = line.strip().split()
+                if len(line) > self.maxlen['test']:
+                    self.maxlen['test'] = len(line)
+                X.append(line)
+        self.data['test'] = [X]
 
     def to_sequence(self):
         for key in self.data:

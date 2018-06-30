@@ -27,11 +27,13 @@ def main():
     print ('')
     with open(targetfile, 'r', encoding='utf-8') as content :
         for texts_num, line in enumerate(content):
+            output.write('卍 ')
             line = line.strip('\n')
             words = jieba.cut(line, cut_all=False)
             for word in words:
                 if word not in stopword_set:
                     output.write(word + ' ')
+            output.write('乂')
             output.write('\n')
 
             print ('\rSplitting line %d' % (texts_num+1), end='', flush=True)

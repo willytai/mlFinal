@@ -1,12 +1,31 @@
 import re
 import os, sys
 import numpy as np
+import jieba
 from gensim.models import Word2Vec
 from scipy import spatial
 from gensim.models.keyedvectors import KeyedVectors
 from keras.preprocessing.text import Tokenizer
 from keras.preprocessing.sequence import pad_sequences
 import pickle as pkl
+
+def segmentation(text):
+    # jieba custom setting.
+    # load user defined dictionary
+    jieba.load_userdict('jieba_dict/user_dict.txt')
+
+    # load stopwords set
+    stopword_set = set()
+    with open('jieba_dict/stopwords.txt','r', encoding='utf-8') as stopwords:
+        for stopword in stopwords:
+            stopword_set.add(stopword.strip('\n'))
+    words = jieba.cut(text, cut_all=False)
+
+    char = []
+    for word in words:
+        if word not in stopword_set:
+            char.append(word)
+    return char
 
 def norm(data):
     mean = data.mean(axis=0)

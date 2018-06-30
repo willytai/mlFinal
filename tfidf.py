@@ -1,3 +1,12 @@
+'''
+this trains the term frequency-inverse document frequency
+which is used as the word weighting when retrieving sentence vector
+the result is saved as a dictionary
+load it like this:
+	np.load('tfidf.npy').item()
+'''
+
+
 from gensim.models import TfidfModel, word2vec
 from gensim import corpora, similarities
 from gensim.models.keyedvectors import KeyedVectors
